@@ -1,0 +1,28 @@
+# See https://docs.ansible.com/ansible/latest/dev_guide/collections_galaxy_meta.html
+
+namespace: community
+name: vagrant
+version: 0.0.0
+readme: README.md
+authors:
+  - Arnaud Patard (github.com/apatard)
+  - Sorin Sbarnea (github.com/ssbarnea)
+  - Thomas Sjögren (github.com/konstruktoid)
+description: Allow using vagrant from Ansible, original code from molecule-vagrant plugin.
+license_file: LICENSE
+tags:
+  # tags so people can search for collections https://galaxy.ansible.com/search
+  # tags are all lower-case, no spaces, no dashes.
+  - vagrant
+  - molecule
+  - cloud
+  - libvirt
+  - virtualbox
+repository: https://github.com/ansible-collections/community.vagrant
+documentation: https://github.com/ansible-collections/community.vagrant
+homepage: https://github.com/ansible-collections/community.vagrant
+issues: https://github.com/ansible-collections/community.vagrant/issues
+build_ignore:
+  # https://docs.ansible.com/ansible/devel/dev_guide/developing_collections_distributing.html#ignoring-files-and-folders
+  - .gitignore
+  - changelogs/.plugin-cache.yaml
