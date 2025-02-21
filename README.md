@@ -126,6 +126,6 @@ See the [changelog](https://github.com/ansible-collections/REPONAMEHERE/tree/mai
 
 <!-- Include the appropriate license information here and a pointer to the full licensing details. If the collection contains modules migrated from the ansible/ansible repo, you must use the same license that existed in the ansible/ansible repo. See the GNU license example below. -->
 
-GNU General Public License v3.0 or later.
+MIT.
 
-See [LICENSE](https://www.gnu.org/licenses/gpl-3.0.txt) to see the full text.
+See [LICENSE](https://opensource.org/license/mit) to see the full text.
