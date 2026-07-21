@@ -1,0 +1,16 @@
+line-length = 160
+
+[lint]
+
+
+ignore = [
+    # Needed:
+    "E402",  # Module level import not at top of file
+]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed or starting with dummy
+dummy-variable-rgx = "^(_|dummy).*$"

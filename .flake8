@@ -1,0 +1,9 @@
+[flake8]
+extend-ignore = E402
+count = true
+# TODO: decrease this to ~10
+#max-complexity = 34
+# black's max-line-length is 89, but it doesn't touch long string literals.
+# Since ansible-test's limit is 160, let's use that here.
+max-line-length = 160
+statistics = true
