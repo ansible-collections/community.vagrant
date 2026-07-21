@@ -1,0 +1,20 @@
+---
+name: antsibull-nox
+
+"on":
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
+
+jobs:
+  nox:
+    uses: ansible-community/antsibull-nox/.github/workflows/reusable-nox-run.yml@main
+    with:
+      session-name: Run extra sanity tests
+
+  ansible-test:
+    uses: ansible-community/antsibull-nox/.github/workflows/reusable-nox-matrix.yml@main

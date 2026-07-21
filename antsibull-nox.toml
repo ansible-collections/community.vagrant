@@ -1,0 +1,35 @@
+[sessions]
+
+[sessions.lint]
+default = true
+run_ruff_autofix = true
+ruff_autofix_config = "ruff.toml"
+black_config = "black.toml"
+flake8_config = ".flake8"
+pylint_rcfile = ".pylintrc"
+yamllint_config = ".yamllint"
+yamllint_config_plugins = ".yamllint-docs"
+yamllint_config_plugins_examples = ".yamllint-examples"
+mypy_config = ".mypy.ini"
+mypy_extra_deps = [
+    "python-vagrant",
+]
+
+[sessions.docs_check]
+validate_collection_refs="all"
+
+[sessions.ansible_lint]
+default = true
+
+[sessions.build_import_check]
+
+[sessions.ansible_test_sanity]
+include_devel = true
+
+[sessions.extra_checks]
+run_no_unwanted_files = true
+no_unwanted_files_module_extensions = [".py"]
+no_unwanted_files_yaml_extensions = [".yml"]
+run_action_groups = true
+run_no_trailing_whitespace = true
+run_avoid_characters = true
