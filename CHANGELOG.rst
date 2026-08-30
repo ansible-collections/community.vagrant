@@ -1,5 +1,18 @@
-Will be updated by antsibull-changelog. Do not edit this manually!
+===============================
+Community Vagrant Release Notes
+===============================
 
-See https://github.com/ansible-community/antsibull-changelog/blob/main/docs/changelogs.rst for information on how to use antsibull-changelog.
+.. contents:: Topics
 
-Check out ``changelogs/config.yaml`` for its configuration. You need to change at least the ``title`` field in there.
+v1.0.0
+======
+
+Release Summary
+---------------
+
+This is the initial release of the ``community.vagrant`` collection. It provides the ``community.vagrant.vagrant`` module, which manages the life cycle of Vagrant instances. The original code was taken from the ``molecule-vagrant`` plugin.
+
+New Modules
+-----------
+
+- community.vagrant.vagrant - Manage Vagrant instances

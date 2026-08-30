@@ -24,6 +24,7 @@ module: vagrant
 short_description: Manage Vagrant instances
 description:
   - Manage the life cycle of Vagrant instances.
+version_added: '1.0.0'
 author:
   - Cisco Systems, Inc. (!UNKNOWN)
 options:
@@ -138,7 +139,7 @@ options:
     description:
       - vagrant working directory. If not specified, it will be set to
         the content of E(MOLECULE_EPHEMERAL_DIRECTORY) environment variable
-    required: false
+    required: true
     type: str
   default_box:
     description:
@@ -192,7 +193,11 @@ from collections.abc import MutableMapping
 from datetime import datetime, timezone
 from typing import Any
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import (
+    AnsibleModule,
+    env_fallback,
+    missing_required_lib,
+)
 
 try:
     import vagrant
@@ -603,13 +608,7 @@ class VagrantClient:
 
     def _get_config(self):
         conf = {}
-        conf["workdir"] = os.getenv("MOLECULE_EPHEMERAL_DIRECTORY")
-        if self._module.params["workdir"] is not None:
-            conf["workdir"] = self._module.params["workdir"]
-        if conf["workdir"] is None:
-            self._module.fail_json(
-                msg="Either workdir parameter or MOLECULE_EPHEMERAL_DIRECTORY env variable has to be set",
-            )
+        conf["workdir"] = self._module.params["workdir"]
         conf["vagrantfile"] = os.path.join(conf["workdir"], "Vagrantfile")
         return conf
 
@@ -743,7 +742,7 @@ def main():
     module = AnsibleModule(
         argument_spec={
             "instances": {"type": "list", "required": False, "elements": "dict"},
-            "instance_name": {"type": "str", "required": False, "default": None},
+            "instance_name": {"type": "str", "required": False},
             "instance_interfaces": {"type": "list", "default": [], "elements": "dict"},
             "instance_raw_config_args": {
                 "type": "list",
@@ -780,12 +779,22 @@ def main():
                 "default": "up",
                 "choices": ["up", "destroy", "halt"],
             },
-            "workdir": {"type": "str"},
+            "workdir": {
+                "type": "str",
+                "required": True,
+                "fallback": (env_fallback, ["MOLECULE_EPHEMERAL_DIRECTORY"]),
+            },
             "parallel": {"type": "bool", "default": True},
         },
         required_together=[
             ("platform_box_download_checksum", "platform_box_download_checksum_type"),
             ("instances", "default_box"),
+        ],
+        required_one_of=[
+            ("instances", "instance_name"),
+        ],
+        mutually_exclusive=[
+            ("instances", "instance_name"),
         ],
         supports_check_mode=False,
     )
@@ -798,11 +807,6 @@ def main():
     if not HAS_JINJA2:
         module.fail_json(
             msg=missing_required_lib("jinja2"), exception=JINJA2_IMPORT_ERROR
-        )
-
-    if not bool(module.params["instances"]) ^ bool(module.params["instance_name"]):
-        module.fail_json(
-            msg="Either instances or instance_name parameters should be used and not at the same time",
         )
 
     v = VagrantClient(module)
