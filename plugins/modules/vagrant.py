@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 #  Copyright (c) 2015-2018 Cisco Systems, Inc.
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,7 +18,6 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 #  DEALINGS IN THE SOFTWARE.
 
-from __future__ import absolute_import, division, print_function
 
 DOCUMENTATION = """
 module: vagrant
@@ -188,11 +185,11 @@ EXAMPLES = """
 
 import contextlib
 import copy
-import datetime
 import os
 import subprocess
 import traceback
 from collections.abc import MutableMapping
+from datetime import datetime, timezone
 from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
@@ -456,7 +453,7 @@ class VagrantClient:
         self._vagrant = self._get_vagrant()
         self._write_configs()
         self._has_error = None
-        self._datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._datetime = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         self.result: dict[str, Any] = {}
 
     @contextlib.contextmanager
@@ -546,7 +543,7 @@ class VagrantClient:
 
         self._module.exit_json(changed=changed)
 
-    def _conf_instance(self, instance_name):
+    def _conf_instance(self, instance_name: str):
         try:
             return self._vagrant.conf(vm_name=instance_name)
         except (subprocess.CalledProcessError, RuntimeError):
@@ -555,7 +552,7 @@ class VagrantClient:
                 self.result["stderr"] = f.read()
                 self._module.fail_json(msg=msg, **self.result)
 
-    def _status_instance(self, instance_name):
+    def _status_instance(self, instance_name: str):
         try:
             s = self._vagrant.status(vm_name=instance_name)[0]
 
@@ -738,8 +735,8 @@ class VagrantClient:
     def _get_stderr_log(self):
         return self._get_vagrant_log("err")
 
-    def _get_vagrant_log(self, __type):
-        return os.path.join(self._config["workdir"], f"vagrant.{__type}")
+    def _get_vagrant_log(self, output_type: str) -> str:
+        return os.path.join(self._config["workdir"], f"vagrant.{output_type}")
 
 
 def main():
