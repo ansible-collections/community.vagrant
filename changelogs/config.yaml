@@ -9,6 +9,9 @@ new_plugins_after_name: removed_features
 notesdir: fragments
 prelude_section_name: release_summary
 prelude_section_title: Release Summary
+output_formats:
+  - md
+  - rst
 sections:
   - - major_changes
     - Major Changes
@@ -26,5 +29,8 @@ sections:
     - Bugfixes
   - - known_issues
     - Known Issues
-title: CHANGE THIS IN changelogs/config.yaml!
+title: Community Vagrant
 trivial_section_name: trivial
+use_fqcn: true
+add_plugin_period: true
+changelog_nice_yaml: true

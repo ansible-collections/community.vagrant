@@ -1,2 +1,17 @@
 ---
-releases: {}
+ancestor: null
+releases:
+  1.0.0:
+    changes:
+      release_summary:
+        This is the initial release of the ``community.vagrant`` collection.
+        It provides the ``community.vagrant.vagrant`` module, which manages the life
+        cycle of Vagrant instances. The original code was taken from the ``molecule-vagrant``
+        plugin.
+    fragments:
+      - 1.0.0.yml
+    modules:
+      - description: Manage Vagrant instances
+        name: vagrant
+        namespace: ""
+    release_date: "2026-08-30"
