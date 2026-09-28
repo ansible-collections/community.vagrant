@@ -1,3 +1,6 @@
+[collection_sources]
+"community.internal_test_tools" = "git+https://github.com/ansible-collections/community.internal_test_tools.git,main"
+
 [sessions]
 
 [sessions.lint]
@@ -24,6 +27,9 @@ default = true
 [sessions.build_import_check]
 
 [sessions.ansible_test_sanity]
+include_devel = true
+
+[sessions.ansible_test_units]
 include_devel = true
 
 [sessions.extra_checks]
