@@ -3,8 +3,7 @@ ancestor: null
 releases:
   1.0.0:
     changes:
-      release_summary:
-        This is the initial release of the ``community.vagrant`` collection.
+      release_summary: This is the initial release of the ``community.vagrant`` collection.
         It provides the ``community.vagrant.vagrant`` module, which manages the life
         cycle of Vagrant instances. The original code was taken from the ``molecule-vagrant``
         plugin.
@@ -13,5 +12,15 @@ releases:
     modules:
       - description: Manage Vagrant instances
         name: vagrant
-        namespace: ""
-    release_date: "2026-08-30"
+        namespace: ''
+    release_date: '2026-08-30'
+  1.0.1:
+    changes:
+      bugfixes:
+        - 'vagrant - validate interface network names, preserve interface configuration,
+          and render multiple interfaces correctly when options are omitted. Backports
+          `molecule-plugins PR #102 <https://github.com/ansible-community/molecule-plugins/pull/102>`_
+          and `molecule-plugins PR #374 <https://github.com/ansible-community/molecule-plugins/pull/374>`_.'
+    fragments:
+      - fix-vagrant-interface-rendering.yml
+    release_date: '2026-09-30'
