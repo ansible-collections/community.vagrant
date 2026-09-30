@@ -1,0 +1,1 @@
+plugins/modules/vagrant.py validate-modules:missing-gplv3-license  # Original code is MIT.
