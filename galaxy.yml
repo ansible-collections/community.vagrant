@@ -3,7 +3,7 @@
 
 namespace: community
 name: vagrant
-version: 1.0.1
+version: 1.0.2
 readme: README.md
 authors:
   - Arnaud Patard (github.com/apatard)
