@@ -89,9 +89,9 @@ options:
     type: str
   provider_name:
     description:
-      - Name of the Vagrant provider to use.
+      - Name of the Vagrant provider to use. If omitted, Vagrant selects a
+        provider automatically.
     required: false
-    default: virtualbox
     type: str
   provider_memory:
     description:
@@ -304,6 +304,7 @@ Vagrant.configure('2') do |config|
       {% endfor %}
     {% endif %}
 
+    {% if instance.provider is not none %}
     # Provider options
     c.vm.provider "{{ instance.provider }}" do |{{ instance.provider | lower }}, override|
       {% if instance.provider == "vsphere" %}
@@ -363,6 +364,7 @@ Vagrant.configure('2') do |config|
         {% endfor %}
       {% endif %}
     end
+    {% endif %}
   end
 {% endfor %}
 end
@@ -508,8 +510,12 @@ class VagrantClient:
         if self._running() != len(self.instances):
             changed = True
             provision = self.provision
+            up_options = {"provision": provision}
+            provider = self._module.params["provider_name"]
+            if provider is not None:
+                up_options["provider"] = provider
             with contextlib.suppress(Exception):
-                self._vagrant.up(provision=provision)
+                self._vagrant.up(**up_options)
 
         # NOTE(retr0h): Ansible wants only one module return `fail_json`
         # or `exit_json`.
@@ -782,7 +788,7 @@ def main():
                 "default": None,
                 "elements": "str",
             },
-            "provider_name": {"type": "str", "default": "virtualbox"},
+            "provider_name": {"type": "str", "default": None},
             "default_box": {"type": "str", "default": None},
             "provision": {"type": "bool", "default": False},
             "force_stop": {"type": "bool", "default": False},
