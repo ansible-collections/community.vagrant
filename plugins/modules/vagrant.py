@@ -462,7 +462,9 @@ class VagrantClient:
         self._write_configs()
         self._has_error = None
         # datetime.UTC requires Python 3.11, but the module supports Python 3.10.
-        self._datetime = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        self._datetime = datetime.now(timezone.utc).strftime(  # noqa: UP017
+            "%Y-%m-%d %H:%M:%S"
+        )
         self.result: dict[str, Any] = {}
 
     @contextlib.contextmanager

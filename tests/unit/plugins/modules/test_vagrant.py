@@ -50,9 +50,8 @@ def make_client(
     """Construct a VagrantClient without invoking external Vagrant commands."""
     client = object.__new__(vagrant_module.VagrantClient)
     client._module = FakeModule()  # pylint: disable=protected-access
-    client._module.params["provider_name"] = (
-        provider_name  # pylint: disable=protected-access
-    )
+    module = getattr(client, "_module")
+    module.params["provider_name"] = provider_name
     client.cachier = "machine"
     client.provision = False
     client._has_error = None  # pylint: disable=protected-access
@@ -148,9 +147,8 @@ def make_up_client(
 ) -> vagrant_module.VagrantClient:
     """Construct a client with the lifecycle dependencies stubbed."""
     client = make_client()
-    client._module.params["provider_name"] = (
-        provider_name  # pylint: disable=protected-access
-    )
+    module = getattr(client, "_module")
+    module.params["provider_name"] = provider_name
     client.instances = [{"name": "instance"}]
     client._vagrant = Mock()  # pylint: disable=protected-access
     monkeypatch.setattr(client, "_running", Mock(return_value=0))
@@ -207,6 +205,7 @@ def test_up_omits_provider_when_not_configured(
 
 def test_vagrantfile_omits_provider_block_when_not_configured() -> None:
     """Avoid pinning a provider in the Vagrantfile when none was selected."""
+    # pylint: disable=protected-access
     config = make_client(
         provider_name=None
     )._get_instance_vagrant_config_dict(  # pylint: disable=protected-access
@@ -221,10 +220,9 @@ def test_vagrantfile_omits_provider_block_when_not_configured() -> None:
 
 def test_vagrantfile_keeps_explicit_provider_configuration() -> None:
     """Keep provider-specific configuration when the user selects a provider."""
+    # pylint: disable=protected-access
     client = make_client()
-    client._module.params["provider_name"] = (
-        "libvirt"  # pylint: disable=protected-access
-    )
+    getattr(client, "_module").params["provider_name"] = "libvirt"
     config = client._get_instance_vagrant_config_dict(
         {"name": "instance"}
     )  # pylint: disable=protected-access
