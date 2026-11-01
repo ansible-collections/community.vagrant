@@ -50,7 +50,9 @@ def make_client(
     """Construct a VagrantClient without invoking external Vagrant commands."""
     client = object.__new__(vagrant_module.VagrantClient)
     client._module = FakeModule()  # pylint: disable=protected-access
-    client._module.params["provider_name"] = provider_name  # pylint: disable=protected-access
+    client._module.params["provider_name"] = (
+        provider_name  # pylint: disable=protected-access
+    )
     client.cachier = "machine"
     client.provision = False
     client._has_error = None  # pylint: disable=protected-access
@@ -86,7 +88,9 @@ def test_interfaces_render_as_separate_statements_with_optional_options() -> Non
         deepcopy(instance),
     )
     rendered = render_vagrantfile([config])
-    network_lines = [line.strip() for line in rendered.splitlines() if "c.vm.network" in line]
+    network_lines = [
+        line.strip() for line in rendered.splitlines() if "c.vm.network" in line
+    ]
 
     assert network_lines == [
         'c.vm.network "private_network"',
@@ -138,19 +142,24 @@ def test_interface_without_options_omits_options() -> None:
     assert config["networks"] == [{"name": "private_network"}]
 
 
-def make_up_client(provider_name: str | None) -> vagrant_module.VagrantClient:
+def make_up_client(
+    provider_name: str | None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> vagrant_module.VagrantClient:
     """Construct a client with the lifecycle dependencies stubbed."""
     client = make_client()
-    client._module.params["provider_name"] = provider_name  # pylint: disable=protected-access
+    client._module.params["provider_name"] = (
+        provider_name  # pylint: disable=protected-access
+    )
     client.instances = [{"name": "instance"}]
     client._vagrant = Mock()  # pylint: disable=protected-access
-    client._running = Mock(return_value=0)  # pylint: disable=protected-access
-    client._conf = Mock(return_value=[])  # pylint: disable=protected-access
+    monkeypatch.setattr(client, "_running", Mock(return_value=0))
+    monkeypatch.setattr(client, "_conf", Mock(return_value=[]))
     client._config = {"workdir": "/tmp"}  # pylint: disable=protected-access
     return client
 
 
-def test_provider_name_defaults_to_none(monkeypatch) -> None:
+def test_provider_name_defaults_to_none(monkeypatch: pytest.MonkeyPatch) -> None:
     """Omitted provider_name remains unset so Vagrant can select a provider."""
 
     class CapturedArgumentSpec(Exception):
@@ -166,10 +175,12 @@ def test_provider_name_defaults_to_none(monkeypatch) -> None:
         vagrant_module.main()
 
 
-def test_up_passes_explicit_provider_even_if_default_env_is_set(monkeypatch) -> None:
+def test_up_passes_explicit_provider_even_if_default_env_is_set(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Explicit provider selection must override VAGRANT_DEFAULT_PROVIDER."""
     monkeypatch.setenv("VAGRANT_DEFAULT_PROVIDER", "virtualbox")
-    client = make_up_client("libvirt")
+    client = make_up_client("libvirt", monkeypatch)
 
     with pytest.raises(AnsibleExitJson):
         client.up()
@@ -180,9 +191,11 @@ def test_up_passes_explicit_provider_even_if_default_env_is_set(monkeypatch) -> 
     )
 
 
-def test_up_omits_provider_when_not_configured() -> None:
+def test_up_omits_provider_when_not_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Let Vagrant choose the provider when provider_name is omitted."""
-    client = make_up_client(None)
+    client = make_up_client(None, monkeypatch)
 
     with pytest.raises(AnsibleExitJson):
         client.up()
@@ -194,7 +207,9 @@ def test_up_omits_provider_when_not_configured() -> None:
 
 def test_vagrantfile_omits_provider_block_when_not_configured() -> None:
     """Avoid pinning a provider in the Vagrantfile when none was selected."""
-    config = make_client(provider_name=None)._get_instance_vagrant_config_dict(  # pylint: disable=protected-access
+    config = make_client(
+        provider_name=None
+    )._get_instance_vagrant_config_dict(  # pylint: disable=protected-access
         {"name": "instance"},
     )
 
@@ -207,8 +222,12 @@ def test_vagrantfile_omits_provider_block_when_not_configured() -> None:
 def test_vagrantfile_keeps_explicit_provider_configuration() -> None:
     """Keep provider-specific configuration when the user selects a provider."""
     client = make_client()
-    client._module.params["provider_name"] = "libvirt"  # pylint: disable=protected-access
-    config = client._get_instance_vagrant_config_dict({"name": "instance"})  # pylint: disable=protected-access
+    client._module.params["provider_name"] = (
+        "libvirt"  # pylint: disable=protected-access
+    )
+    config = client._get_instance_vagrant_config_dict(
+        {"name": "instance"}
+    )  # pylint: disable=protected-access
 
     rendered = render_vagrantfile([config])
 

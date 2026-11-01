@@ -429,18 +429,28 @@ class VagrantClient:
                 {
                     "name": self._module.params["instance_name"],
                     "interfaces": self._module.params["instance_interfaces"],
-                    "instance_raw_config_args": self._module.params["instance_raw_config_args"],
+                    "instance_raw_config_args": self._module.params[
+                        "instance_raw_config_args"
+                    ],
                     "config_options": self._module.params["config_options"],
                     "box": self._module.params["platform_box"],
                     "box_version": self._module.params["platform_box_version"],
                     "box_url": self._module.params["platform_box_url"],
-                    "box_download_checksum": self._module.params["platform_box_download_checksum"],
-                    "box_download_checksum_type": self._module.params["platform_box_download_checksum_type"],
+                    "box_download_checksum": self._module.params[
+                        "platform_box_download_checksum"
+                    ],
+                    "box_download_checksum_type": self._module.params[
+                        "platform_box_download_checksum_type"
+                    ],
                     "memory": self._module.params["provider_memory"],
                     "cpus": self._module.params["provider_cpus"],
                     "provider_options": self._module.params["provider_options"],
-                    "provider_override_args": self._module.params["provider_override_args"],
-                    "provider_raw_config_args": self._module.params["provider_raw_config_args"],
+                    "provider_override_args": self._module.params[
+                        "provider_override_args"
+                    ],
+                    "provider_raw_config_args": self._module.params[
+                        "provider_raw_config_args"
+                    ],
                 },
             ]
         else:
@@ -452,9 +462,7 @@ class VagrantClient:
         self._write_configs()
         self._has_error = None
         # datetime.UTC requires Python 3.11, but the module supports Python 3.10.
-        self._datetime = datetime.now(timezone.utc).strftime(  # noqa: UP017
-            "%Y-%m-%d %H:%M:%S"
-        )
+        self._datetime = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         self.result: dict[str, Any] = {}
 
     @contextlib.contextmanager
@@ -731,7 +739,10 @@ class VagrantClient:
         return d
 
     def _get_vagrant_config_dict(self):
-        config_list = [self._get_instance_vagrant_config_dict(instance) for instance in self.instances]
+        config_list = [
+            self._get_instance_vagrant_config_dict(instance)
+            for instance in self.instances
+        ]
         return config_list
 
     def _get_stdout_log(self):
@@ -806,10 +817,14 @@ def main():
     )
 
     if not HAS_VAGRANT:
-        module.fail_json(msg=missing_required_lib("vagrant"), exception=VAGRANT_IMPORT_ERROR)
+        module.fail_json(
+            msg=missing_required_lib("vagrant"), exception=VAGRANT_IMPORT_ERROR
+        )
 
     if not HAS_JINJA2:
-        module.fail_json(msg=missing_required_lib("jinja2"), exception=JINJA2_IMPORT_ERROR)
+        module.fail_json(
+            msg=missing_required_lib("jinja2"), exception=JINJA2_IMPORT_ERROR
+        )
 
     v = VagrantClient(module)
 
