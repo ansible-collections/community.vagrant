@@ -7,14 +7,16 @@ from __future__ import annotations
 
 from copy import deepcopy
 from typing import Any
+from unittest.mock import Mock
 
 import jinja2
 import pytest
 from ansible_collections.community.internal_test_tools.tests.unit.plugins.modules.utils import (
+    AnsibleExitJson,
     AnsibleFailJson,
+    exit_json,
     fail_json,
 )
-
 from ansible_collections.community.vagrant.plugins.modules import (
     vagrant as vagrant_module,
 )
@@ -26,8 +28,13 @@ class FakeModule:
     def __init__(self) -> None:
         self.params = {
             "default_box": "generic/alpine316",
-            "provider_name": "virtualbox",
+            "instance_name": None,
+            "provider_name": None,
         }
+
+    def exit_json(self, **kwargs: Any) -> None:
+        """Raise a test-visible exception for a successful module exit."""
+        exit_json(**kwargs)
 
     def fail_json(self, **kwargs: Any) -> None:
         """Raise a test-visible exception for an Ansible module failure."""
@@ -37,12 +44,16 @@ class FakeModule:
         """Ignore compatibility warnings in unit tests."""
 
 
-def make_client() -> vagrant_module.VagrantClient:
+def make_client(
+    provider_name: str | None = "virtualbox",
+) -> vagrant_module.VagrantClient:
     """Construct a VagrantClient without invoking external Vagrant commands."""
     client = object.__new__(vagrant_module.VagrantClient)
     client._module = FakeModule()  # pylint: disable=protected-access
+    client._module.params["provider_name"] = provider_name  # pylint: disable=protected-access
     client.cachier = "machine"
     client.provision = False
+    client._has_error = None  # pylint: disable=protected-access
     return client
 
 
@@ -75,9 +86,7 @@ def test_interfaces_render_as_separate_statements_with_optional_options() -> Non
         deepcopy(instance),
     )
     rendered = render_vagrantfile([config])
-    network_lines = [
-        line.strip() for line in rendered.splitlines() if "c.vm.network" in line
-    ]
+    network_lines = [line.strip() for line in rendered.splitlines() if "c.vm.network" in line]
 
     assert network_lines == [
         'c.vm.network "private_network"',
@@ -127,3 +136,80 @@ def test_interface_without_options_omits_options() -> None:
     )
 
     assert config["networks"] == [{"name": "private_network"}]
+
+
+def make_up_client(provider_name: str | None) -> vagrant_module.VagrantClient:
+    """Construct a client with the lifecycle dependencies stubbed."""
+    client = make_client()
+    client._module.params["provider_name"] = provider_name  # pylint: disable=protected-access
+    client.instances = [{"name": "instance"}]
+    client._vagrant = Mock()  # pylint: disable=protected-access
+    client._running = Mock(return_value=0)  # pylint: disable=protected-access
+    client._conf = Mock(return_value=[])  # pylint: disable=protected-access
+    client._config = {"workdir": "/tmp"}  # pylint: disable=protected-access
+    return client
+
+
+def test_provider_name_defaults_to_none(monkeypatch) -> None:
+    """Omitted provider_name remains unset so Vagrant can select a provider."""
+
+    class CapturedArgumentSpec(Exception):
+        pass
+
+    def capture_argument_spec(**kwargs: Any) -> None:
+        assert kwargs["argument_spec"]["provider_name"]["default"] is None
+        raise CapturedArgumentSpec
+
+    monkeypatch.setattr(vagrant_module, "AnsibleModule", capture_argument_spec)
+
+    with pytest.raises(CapturedArgumentSpec):
+        vagrant_module.main()
+
+
+def test_up_passes_explicit_provider_even_if_default_env_is_set(monkeypatch) -> None:
+    """Explicit provider selection must override VAGRANT_DEFAULT_PROVIDER."""
+    monkeypatch.setenv("VAGRANT_DEFAULT_PROVIDER", "virtualbox")
+    client = make_up_client("libvirt")
+
+    with pytest.raises(AnsibleExitJson):
+        client.up()
+
+    client._vagrant.up.assert_called_once_with(  # pylint: disable=protected-access
+        provider="libvirt",
+        provision=False,
+    )
+
+
+def test_up_omits_provider_when_not_configured() -> None:
+    """Let Vagrant choose the provider when provider_name is omitted."""
+    client = make_up_client(None)
+
+    with pytest.raises(AnsibleExitJson):
+        client.up()
+
+    client._vagrant.up.assert_called_once_with(  # pylint: disable=protected-access
+        provision=False,
+    )
+
+
+def test_vagrantfile_omits_provider_block_when_not_configured() -> None:
+    """Avoid pinning a provider in the Vagrantfile when none was selected."""
+    config = make_client(provider_name=None)._get_instance_vagrant_config_dict(  # pylint: disable=protected-access
+        {"name": "instance"},
+    )
+
+    rendered = render_vagrantfile([config])
+
+    assert 'c.vm.provider "None"' not in rendered
+    assert 'c.vm.provider "virtualbox"' not in rendered
+
+
+def test_vagrantfile_keeps_explicit_provider_configuration() -> None:
+    """Keep provider-specific configuration when the user selects a provider."""
+    client = make_client()
+    client._module.params["provider_name"] = "libvirt"  # pylint: disable=protected-access
+    config = client._get_instance_vagrant_config_dict({"name": "instance"})  # pylint: disable=protected-access
+
+    rendered = render_vagrantfile([config])
+
+    assert 'c.vm.provider "libvirt"' in rendered
